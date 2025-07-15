@@ -1,0 +1,134 @@
+import random
+
+class Personagem:
+    def __init__(self, nome, idade, vida):
+        self.nome = nome
+        self.idade = idade
+        self.vida = vida
+        self.itens = {}  # eu coloquei isso aqui para poder guardar os itens se quiser mais pra frente
+
+    def upgrade_vida(self, incremento=10):
+        self.vida += incremento
+        print(f'Vida de {self.nome} aumentou para: {self.vida}')
+
+    def downgrade_vida(self, dano=15):
+        self.vida = max(self.vida - dano, 0)  # coloquei max pra vida nunca ficar negativa
+        print(f'Vida de {self.nome} reduziu para: {self.vida}')
+
+    def update_nome(self, novo_nome):
+        self.nome = novo_nome
+
+    def __str__(self):
+        return f'{self.__class__.__name__}: {self.nome}, Idade: {self.idade}, Vida: {self.vida}'
+
+
+class Vilao(Personagem):
+    def __init__(self, nome, idade, vida, maldade):
+        super().__init__(nome, idade, vida)
+        niveis = ['Baixa', 'Média', 'Alta']
+        if maldade not in niveis:
+            raise ValueError("Maldade deve ser Baixa, Média ou Alta")
+        self.maldade = maldade
+
+    def ataque(self, alvo):
+        # aqui eu fiz o dano mudar dependendo do nível de maldade
+        dano_base = {'Baixa': 5, 'Média': 10, 'Alta': 15}
+        dano = dano_base[self.maldade]
+        critico = random.random() < 0.2  # chance de 20% de ataque crítico
+        if critico:
+            dano *= 2
+            print("⚡ ATAQUE CRÍTICO!")
+        print(f"{self.nome} atacou {alvo.nome} causando {dano} de dano!")
+        alvo.downgrade_vida(dano)
+
+    def __str__(self):
+        return super().__str__() + f", Maldade: {self.maldade}"
+
+
+class Heroi(Personagem):
+    def __init__(self, nome, idade, vida):
+        super().__init__(nome, idade, vida)
+        self.refens_salvos = 0  # criei pra contar os reféns que ele salva
+        self.itens = {
+            'espada': {'dano': 15},
+            'poção': {'cura': 20},
+            'escudo': {'defesa': 10}  # o escudo ainda não usei, mas já deixei aqui caso queira usar depois
+        }
+        self.historico = []  # aqui serve pra guardar tudo o que o herói fez na luta
+
+    def atacar(self, inimigo):
+        dano = self.itens['espada']['dano']
+        critico = random.random() < 0.2  # coloquei chance de crítico no ataque também
+        if critico:
+            dano *= 2
+            print("⚡ ATAQUE CRÍTICO!")
+        print(f"{self.nome} atacou {inimigo.nome} com a espada e causou {dano} de dano!")
+        inimigo.downgrade_vida(dano)
+        self.historico.append(f"Atacou {inimigo.nome} causando {dano} de dano")  # adiciona no histórico
+
+    def usar_pocao(self):
+        cura = self.itens['poção']['cura']
+        self.vida += cura
+        print(f"{self.nome} usou uma poção e recuperou {cura} de vida! Vida atual: {self.vida}")
+        self.historico.append("Usou uma poção")
+
+    def salvar_refem(self):
+        # quis adicionar algo exclusivo do herói que mostra mais ação além da luta
+        self.refens_salvos += 1
+        print(f"{self.nome} salvou um refém! Total: {self.refens_salvos}")
+        self.historico.append("Salvou um refém")
+
+    def dialogar(self, outro):
+        # fiz isso pra deixar o jogo mais imersivo, com uma interação antes da luta
+        print(f"{self.nome}: 'Você não vencerá, {outro.nome}!'")
+        print(f"{outro.nome}: 'Veremos sobre isso, {self.nome}...'")
+        self.historico.append(f"Dialogou com {outro.nome}")
+
+
+def main():
+    heroi = Heroi("Link", 30, 100)
+    vilao = Vilao("Ganon", 45, 120, "Alta")
+
+    print("\n### BATALHA FINAL ###")
+    heroi.dialogar(vilao)  # aqui eu fiz eles conversarem antes da batalha
+
+    while heroi.vida > 0 and vilao.vida > 0:
+        print(f"\nStatus: {heroi.nome} (Vida: {heroi.vida}) | {vilao.nome} (Vida: {vilao.vida})")
+        print("Escolha uma ação:")
+        print("1 - Atacar")
+        print("2 - Usar Poção")
+        print("3 - Salvar Refém")
+        print("4 - Fugir")
+
+        acao = input("Digite sua escolha: ")
+
+        if acao == "1":
+            heroi.atacar(vilao)
+        elif acao == "2":
+            heroi.usar_pocao()
+        elif acao == "3":
+            heroi.salvar_refem()
+        elif acao == "4":
+            print(f"{heroi.nome} fugiu da batalha!")
+            heroi.historico.append("Fugiu da batalha")
+            break
+        else:
+            print("Ação inválida!")
+            continue
+
+        if vilao.vida > 0:
+            vilao.ataque(heroi)
+
+    print("\n=== FIM DE JOGO ===")
+    if heroi.vida == 0:
+        print(f"{heroi.nome} foi derrotado... 😢")
+    elif vilao.vida == 0:
+        print(f"Parabéns! {heroi.nome} derrotou {vilao.nome}! 🎉")
+
+    print("\n--- Histórico de Ações ---")
+    for evento in heroi.historico:
+        print(f"- {evento}")
+
+
+if __name__ == "__main__":
+    main()
